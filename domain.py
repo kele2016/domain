@@ -36,14 +36,8 @@ def logo():
 def whois_query(server,query):
     sd=sk.socket(sk.AF_INET, sk.SOCK_STREAM)
     sd.settimeout(TIMEOUT)
-    address=""
     try:
-        address=sk.gethostbyname(server)
-    except Exception as e:
-        print(e,(server+"|FAILED TO RESOLVE HOSTNAME!"))
-        sys.exit(0)
-    try:
-        sd.connect((address,43))
+        sd.connect((server,43))
     except Exception as e:
         print(e,server+"|FAILED TO REACH WHOIS SERVER!")
         sys.exit(0)
@@ -63,6 +57,7 @@ def whois_query(server,query):
     return result
 
 def find_server(tld,TLD_DATA):
+    whois_ip=""
     #open tls_data file
     try:
         with open(TLD_DATA) as f:
@@ -77,7 +72,12 @@ def find_server(tld,TLD_DATA):
             whois_server=arr[1]
             whois_resp=arr[2]
             if (whois_tld==tld):
-                return (whois_server,whois_resp)
+                try:
+                    whois_ip=sk.gethostbyname(whois_server)
+                except Exception as e:
+                    print(e,(server+"|FAILED TO RESOLVE HOSTNAME!"))
+                    sys.exit(0)
+                return (whois_ip,whois_resp)
 
 def writelog(file, data):
     try:
@@ -126,10 +126,10 @@ if __name__ == "__main__":
     for line in dict_ini:
         dict_line = line.strip('\n')
         domain=dict_line+"."+TLD
-        result=whois_query(server,domain)
-        if re.search(resp, str(result), re.I):
-            message=(domain+" AVAILABLE FOR REGISTRATION!\n")
-            print(message)
+        whois_resp=whois_query(server,domain)
+        if re.search(resp, str(whois_resp), re.I):
+            resp_ok=(domain+" AVAILABLE FOR REGISTRATION!\n")
+            print(resp_ok)
             writelog(out_file,domain+"\n")
         else:
             print(domain+" NOT AVAILABLE\n")
