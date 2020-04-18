@@ -4,7 +4,6 @@ import socket as sk
 from optparse import OptionParser
 import sys
 import time
-import re
 
 TIMEOUT=5
 TLD_DATA='TLD_DATA'
@@ -57,7 +56,6 @@ def whois_query(server,query):
     return result
 
 def find_server(tld,TLD_DATA):
-    whois_ip=""
     #open tls_data file
     try:
         with open(TLD_DATA) as f:
@@ -72,11 +70,6 @@ def find_server(tld,TLD_DATA):
             whois_server=arr[1]
             whois_resp=arr[2]
             if (whois_tld==tld):
-                try:
-                    whois_ip=sk.gethostbyname(whois_server)
-                except Exception as e:
-                    print(e,(server+"|FAILED TO RESOLVE HOSTNAME!"))
-                    sys.exit(0)
                 return (whois_ip,whois_resp)
 
 def writelog(file, data):
@@ -117,17 +110,23 @@ if __name__ == "__main__":
         print('ERROR: DICT file not found\n')
         sys.exit(0)
     print('Scanning domains with '+TLD+' domains...with '+DICT+'\n')
-
     (server,resp)=find_server(TLD,TLD_DATA)
     if(server==None):
         print("ERROR:WHOIS SERVER NOT FOUND")
+    else:
+        try:
+            whois_ip=sk.gethostbyname(server)
+            print('WHOIS SERVER:'+server+'('+ whois_ip +')\n')
+        except Exception as e:
+            print(e,(server+"|FAILED TO RESOLVE HOSTNAME!"))
+            sys.exit(0)
 
     i=0
     for line in dict_ini:
         dict_line = line.strip('\n')
         domain=dict_line+"."+TLD
         whois_resp=whois_query(server,domain)
-        if re.search(resp, str(whois_resp), re.I):
+        if str(whois_resp).find(resp)!=-1:
             resp_ok=(domain+" AVAILABLE FOR REGISTRATION!\n")
             print(resp_ok)
             writelog(out_file,domain+"\n")
