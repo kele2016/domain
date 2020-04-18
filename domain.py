@@ -70,7 +70,7 @@ def find_server(tld,TLD_DATA):
             whois_server=arr[1]
             whois_resp=arr[2]
             if (whois_tld==tld):
-                return (whois_ip,whois_resp)
+                return (whois_server,whois_resp)
 
 def writelog(file, data):
     try:
